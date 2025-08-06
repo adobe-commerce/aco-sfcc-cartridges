@@ -38,7 +38,17 @@ This job is required to enable the functionality of the `getAcoTrackedChanges` c
 
 ## API Endpoints
 
-### 1. Get All Price Books
+### 1. Get Site Catalog
+
+- **Endpoint**: `GET /catalog`
+- **Operation ID**: `getSiteCatalog`
+- **Description**: Get information about the catalog assigned to the given site.
+- **Parameters**:
+  - `siteId` (required): The site ID
+- **Authentication**: AmOAuth2 with `c_aco` scope
+- **Response**: Returns details about the catalog that is assigned to the provided `siteId`.
+
+### 2. Get All Price Books
 
 - **Endpoint**: `GET /pricebooks`
 - **Operation ID**: `getAllPriceBooks`
@@ -48,9 +58,9 @@ This job is required to enable the functionality of the `getAcoTrackedChanges` c
   - `c_limit`: Maximum number of price books to return per request.
   - `c_offset`: The zero-based index of the first price book to include in the result.
 - **Authentication**: AmOAuth2 with `c_aco` scope
-- **Response**: Returns a list of price books with details including ID, display name, currency, online status, and parent price book relationships
+- **Response**: Returns a list of price books with details including ID, display name, currency, online status, and parent price book relationships.
 
-### 2. Get Price Book By ID
+### 3. Get Price Book By ID
 
 - **Endpoint**: `GET /pricebooks/{priceBookId}`
 - **Operation ID**: `getPriceBooks`
@@ -58,9 +68,9 @@ This job is required to enable the functionality of the `getAcoTrackedChanges` c
 - **Parameters**:
   - `siteId` (required): The site ID
 - **Authentication**: AmOAuth2 with `c_aco` scope
-- **Response**: Returns a list of price books with details including ID, display name, currency, online status, and parent price book relationships.
+- **Response**: Returns the requested price book with details including ID, display name, currency, online status, and parent price book relationships.
 
-### 3. Get Products
+### 4. Get Products
 
 - **Endpoint**: `POST /products`
 - **Operation ID**: `getProducts`
@@ -88,6 +98,14 @@ This job is required to enable the functionality of the `getAcoTrackedChanges` c
 - **Response**: Returns detailed product information including prices per price book, attributes, images, and metadata.
 
 ## Usage Examples
+
+### Get Site Catalog
+
+```sh
+curl -X GET "https://{short-code}.api.commercecloud.salesforce.com/custom/aco/v1/organizations/{org-id}/catalog?siteId={site-id}" \
+  -H "Authorization: Bearer {scapi-access-token}" \
+  -H "Content-Type: application/json"
+```
 
 ### Get All Price Books
 
@@ -134,9 +152,11 @@ int_adobe_commerce_optimizer/
 │   │   ├── aco/
 │   │   │   ├── api.json                        # API endpoint definition
 │   │   │   ├── schema.yaml                     # OpenAPI schema
+│   │   │   └── catalog.js                      # Site Catalog API Implementation logic
+│   │   │   └── changes.js                      # ACO Tracked Changes API Implementation logic
 │   │   │   ├── pricebooks.js                   # Price Book API Implementation logic
 │   │   │   ├── products.js                     # Products API Implementation logic
-│   │   │   └── changes.js                      # ACO Tracked Changes API Implementation logic└── rest-apis/
+│   │   │   └── changes.js                      # ACO Tracked Changes API Implementation logic
 │   └── scripts/
 │       ├── jobs/
 │       │   └── acoTrackedChanges.js            # ACO Tracked Changes job step implmentation

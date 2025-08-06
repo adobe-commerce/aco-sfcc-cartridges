@@ -282,7 +282,7 @@ security:
 paths:
   /catalog:
     get:
-      summary: Get site catalog
+      summary: Get information about the catalog assigned to the given site.
       operationId: getSiteCatalog
       parameters:
         - in: query
