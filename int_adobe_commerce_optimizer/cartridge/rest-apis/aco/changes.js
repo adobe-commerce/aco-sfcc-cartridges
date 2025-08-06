@@ -42,8 +42,8 @@ exports.getAcoTrackedChanges = function () {
     changes.push({
       id: record.custom.ID,
       deltaExportFile: record.custom.deltaExportFile,
-      entityId: record.custom.entityId,
       siteId: record.custom.siteId,
+      entityId: record.custom.entityId,
       priceBookId: record.custom.priceBookId,
       type: record.custom.type,
       isDeleted: record.custom.isDeleted,

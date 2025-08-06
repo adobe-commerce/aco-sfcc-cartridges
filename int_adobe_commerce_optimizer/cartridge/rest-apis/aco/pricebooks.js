@@ -10,7 +10,7 @@ exports.getAllPriceBooks = function () {
   const limit = Number(request.httpParameterMap.c_limit.value) || MAX_LIMIT;
   const offset = Number(request.httpParameterMap.c_offset.value) || 0;
 
-  const priceBooks = PricebookMgr.getAllPriceBooks().toArray(offset, limit);
+  const priceBooks = PricebookMgr.getSitePriceBooks().toArray(offset, limit);
 
   const response = {
     total: priceBooks.length,

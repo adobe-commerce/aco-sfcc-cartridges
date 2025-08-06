@@ -19,6 +19,24 @@ components:
             c_aco: Perform Adobe Commerce Optimizer operations
 
   schemas:
+    SiteCatalog:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the catalog.
+        displayName:
+          type: string
+          description: The display name of the catalog.
+        description:
+          type: string
+          description: The description of the catalog.
+        creationDate:
+          type: string
+          description: The creation date of the catalog.
+        lastModified:
+          type: string
+          description: The last modified date of the catalog.
     ProductsRequest:
       type: object
       properties:
@@ -262,6 +280,34 @@ security:
   - AmOAuth2: ["c_aco"]
 
 paths:
+  /catalog:
+    get:
+      summary: Get site catalog
+      operationId: getSiteCatalog
+      parameters:
+        - in: query
+          name: siteId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Successfully retrieved site catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteCatalog"
+        "404":
+          description: Site catalog not found
+          content:
+            application/json:
+              examples:
+                not_found:
+                  value:
+                    {
+                      "type": "https://api.commercecloud.salesforce.com/documentation/error/v1/custom-errors/site-catalog-not-found",
+                    }
   /products:
     post:
       summary: Get products by IDs

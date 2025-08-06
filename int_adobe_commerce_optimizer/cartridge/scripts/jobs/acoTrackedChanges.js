@@ -1,13 +1,15 @@
 const ArrayList = require("dw/util/ArrayList");
+const Bytes = require("dw/util/Bytes");
+const CatalogMgr = require("dw/catalog/CatalogMgr");
 const CustomObjectMgr = require("dw/object/CustomObjectMgr");
+const Encoding = require("dw/crypto/Encoding");
 const File = require("dw/io/File");
 const FileReader = require("dw/io/FileReader");
 const Logger = require("dw/system/Logger");
+const PricebookMgr = require("dw/catalog/PriceBookMgr");
 const Site = require("dw/system/Site");
 const Status = require("dw/system/Status");
 const Transaction = require("dw/system/Transaction");
-const Encoding = require("dw/crypto/Encoding");
-const Bytes = require("dw/util/Bytes");
 const XMLStreamConstants = require("dw/io/XMLStreamConstants");
 const XMLStreamReader = require("dw/io/XMLStreamReader");
 
@@ -77,11 +79,27 @@ function extractPriceBookChanges(zipFile) {
     return [];
   }
 
+  // Get all price books for the current site
+  const sitePriceBooks = PricebookMgr.getSitePriceBooks().toArray();
+  const sitePriceBookIds = sitePriceBooks.map((priceBook) => priceBook.ID);
+  logger.info(
+    `[${siteId}] [extractPriceBookChanges] Site price book IDs: ${sitePriceBookIds}`
+  );
+
   const priceBookDir = new File(uuidDir, "pricebooks");
   if (priceBookDir.exists() && priceBookDir.isDirectory()) {
     // Get all price book files in the 000001/{uuid}/pricebooks/ directory
     const priceBookFiles = priceBookDir.listFiles().toArray();
     priceBookFiles.forEach((priceBookFile) => {
+      // Skip if the price book does not apply to the current site
+      let priceBookFileName = priceBookFile.getName().replace(".xml", "");
+      if (!sitePriceBookIds.includes(priceBookFileName)) {
+        logger.info(
+          `[${siteId}] [extractPriceBookChanges] Price Book ${priceBookFileName} does not apply to the current site: ${siteId}. Skipping...`
+        );
+        return;
+      }
+
       if (priceBookFile.exists()) {
         logger.info(
           `[${siteId}] [extractPriceBookChanges] Processing price book XML file: ${priceBookFile.getFullPath()}`
@@ -151,11 +169,30 @@ function extractCatalogChanges(zipFile) {
     return [];
   }
 
+  // Get the catalog for the current site
+  const siteCatalog = CatalogMgr.getSiteCatalog();
+  if (!siteCatalog) {
+    logger.info(
+      `[${siteId}] [extractCatalogChanges] No site catalog found for site: ${siteId}. Nothing to process.`
+    );
+    return [];
+  }
+  logger.info(
+    `[${siteId}] [extractCatalogChanges] Site catalog ID: ${siteCatalog.ID}`
+  );
+
   const catalogDir = new File(uuidDir, "catalogs");
   if (catalogDir.exists() && catalogDir.isDirectory()) {
     const catalogChildDirs = getChildDirs(catalogDir);
     // Get all child directories in the 000001/{uuid}/catalogs/ directory
     catalogChildDirs.forEach((childDir) => {
+      // Skip if the catalog does not apply to the current site
+      if (childDir.getName() !== siteCatalog.ID) {
+        logger.info(
+          `[${siteId}] [extractCatalogChanges] Catalog ${childDir.getName()} does not apply to the current site: ${siteId}. Skipping...`
+        );
+        return;
+      }
       // Get the catalog.xml file in the child (catalogId) directory
       const catalogXml = new File(childDir, "catalog.xml");
       if (catalogXml.exists()) {
