@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jobs xmlns="http://www.demandware.com/xml/impex/jobs/2015-07-01">
+
+    <job job-id="AdobeCommerceOptimizerTrackedChanges">
+        <description>Detects product and price changes using SFCC Delta Export
+            functionality and record them in the ProductChangeRecord custom object.</description>
+        <parameters>
+            <parameter name="consumer">aco</parameter>
+            <parameter name="deltaExportJobName">aco_delta_exports</parameter>
+        </parameters>
+        <flow>
+            <context site-id="RefArch" />
+            <step step-id="acoTrackedChanges" type="custom.acoTrackedChanges"
+                enforce-restart="false">
+                <description>Detects product and price changes using SFCC Delta Export functionality
+                    and record them in the ProductChangeRecord custom object.</description>
+                <parameters>
+                    <parameter name="consumer" job-parameter-ref="consumer" />
+                    <parameter name="deltaExportJobName" job-parameter-ref="deltaExportJobName" />
+                </parameters>
+            </step>
+        </flow>
+        <rules>
+            <on-running runtime-threshold="60m" enabled="false">
+                <mark-job-as-hanging />
+            </on-running>
+        </rules>
+        <triggers />
+    </job>
+</jobs>

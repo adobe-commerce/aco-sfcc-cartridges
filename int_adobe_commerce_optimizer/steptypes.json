@@ -1,0 +1,53 @@
+{
+  "step-types": {
+    "chunk-script-module-step": [
+      {
+        "@type-id": "custom.acoTrackedChanges",
+        "@supports-site-context": "true",
+        "@supports-parallel-execution": "true",
+        "@supports-organization-context": "false",
+        "description": "Detects product, price book, and price changes using SFCC Delta Export functionality and records them in the AcoTrackedChanges custom object.",
+        "module": "int_adobe_commerce_optimizer/cartridge/scripts/jobs/acoTrackedChanges.js",
+        "read-function": "read",
+        "process-function": "process",
+        "write-function": "write",
+        "total-count-function": "getTotalCount",
+        "before-step-function": "beforeStep",
+        "before-chunk-function": "",
+        "after-chunk-function": "",
+        "after-step-function": "afterStep",
+        "chunk-size": 100,
+        "transactional": "false",
+        "timeout-in-seconds": "3600",
+        "parameters": {
+          "parameter": [
+            {
+              "@name": "consumer",
+              "@type": "string",
+              "description": "The name of the consumer to be used for retrieving the delta export files.",
+              "@required": true
+            },
+            {
+              "@name": "deltaExportJobName",
+              "@type": "string",
+              "description": "The name of the delta export job to be used for retrieving the delta export files.",
+              "@required": true
+            }
+          ]
+        },
+        "status-codes": {
+          "status": [
+            {
+              "@code": "ERROR",
+              "description": "Used when the step failed with an error."
+            },
+            {
+              "@code": "OK",
+              "description": "Used when the step finished successfully."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

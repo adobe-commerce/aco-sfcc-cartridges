@@ -1,0 +1,416 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Adobe Commerce Optimizer Custom SCAPI Schema
+
+components:
+  securitySchemes:
+    AmOAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://account.demandware.com/dwsso/oauth2/authorize
+          tokenUrl: https://account.demandware.com/dwsso/oauth2/access_token
+          scopes:
+            c_aco: Perform Adobe Commerce Optimizer operations
+        clientCredentials:
+          tokenUrl: https://account.demandware.com/dwsso/oauth2/access_token
+          scopes:
+            c_aco: Perform Adobe Commerce Optimizer operations
+
+  schemas:
+    ProductsRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          description: List of product IDs to retrieve (max 100)
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+      required:
+        - ids
+    ProductPrice:
+      type: object
+      properties:
+        priceBookId:
+          type: string
+          description: The ID of the price book the price belongs to.
+        price:
+          type: number
+          description: The price value.
+    ProductAttribute:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the attribute.
+        values:
+          type: array
+          description: The values of the attribute.
+    ProductImage:
+      type: object
+      properties:
+        viewType:
+          type: string
+          description: The view type annotation for the media file. The method returns null, if the media file has no view type annotation.
+        title:
+          type: string
+          description: The title assigned to the media file in current requests locale. If no title was assigned or if no defaulting rule was defined, the method returns null.
+        url:
+          type: string
+          description: The alternative text assigned to the media file in current requests locale. If no alternative text was assigned or if no defaulting rule was defined, the method returns null.
+        path:
+          type: string
+          description: An URL to the referenced media file. The returned URL is a relative URL.
+        absUrl:
+          type: string
+          description: An absolute URL to the referenced media file. The protocol for the reference is the current protocol of the current HTTP request.
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the product.
+        locale:
+          type: string
+          description: The locale of the product.
+        name:
+          type: string
+          description: The name of the product in the current locale.
+        shortDescription:
+          type: string
+          description: The short description of the product
+        longDescription:
+          type: string
+          description: The product's long description in the current locale.
+        pageTitle:
+          type: string
+          description: The product's page title in the default locale.
+        pageDescription:
+          type: string
+          description: Returns product's page description in the default locale.
+        pageKeywords:
+          type: string
+          description: The product's page keywords in the default locale.
+        brand:
+          type: string
+          description: The brand of the product.
+        manufacturerSku:
+          type: string
+          description: The value of the manufacturer's stock keeping unit.
+        manufacturerName:
+          type: string
+          description: The name of the product manufacturer.
+        online:
+          type: boolean
+          description: The online status of the product. The online status is calculated from the online status flag and the onlineFrom onlineTo dates defined for the product.
+        onlineFlag:
+          type: boolean
+          description: The online status flag of the product.
+        searchable:
+          type: boolean
+          description: Identifies if the product is searchable.
+        searchableFlag:
+          type: boolean
+          description: Returns, whether the product is currently searchable.
+        inStock:
+          type: boolean
+          description: Convenience method for isInStock(Number). Returns true, if the Product is available in the minimum-order-quantity. If the product does not have a minimum-order-quantity defined, in-stock is checked for a quantity value 1.
+        creationDate:
+          type: string
+          description: The creation date of the product.
+        lastModified:
+          type: string
+          description: The last modified date of the product.
+        prices:
+          type: array
+          description: Price information per price book.
+          items:
+            $ref: "#/components/schemas/ProductPrice"
+        customAttributes:
+          type: array
+          description: Custom attributes assigned to the product.
+          items:
+            $ref: "#/components/schemas/ProductAttribute"
+        images:
+          type: array
+          description: Returns all images assigned to this product for a specific view type, e.g. all 'thumbnail' images. The images are returned in the order of their index number ascending. When called for a master the method returns the images specific to the master, which are typically the fall back images.
+          items:
+            $ref: "#/components/schemas/ProductImage"
+    ProductsResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: The number of products returned
+        data:
+          type: array
+          description: The list of products
+          items:
+            $ref: "#/components/schemas/Product"
+    PriceBook:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the price book.
+        displayName:
+          type: string
+          description: The display name of the price book.
+        description:
+          type: string
+          description: The description of the price book.
+        currencyCode:
+          type: string
+          description: The currency code of the price book.
+        online:
+          type: boolean
+          description: The online status of the price book. The online status is calculated from the online status flag and the onlineFrom onlineTo dates defined for the price book.
+        onlineFlag:
+          type: boolean
+          description: The online status flag of the price book.
+        onlineFrom:
+          type: string
+          description: The date from which the price book is online or valid.
+        onlineTo:
+          type: string
+          description: The date until which the price book is online or vali
+        creationDate:
+          type: string
+          description: The creation date of the price book.
+        lastModified:
+          type: string
+          description: The last modified date of the price book.
+        parentPriceBook:
+          type: object
+          description: The parent price book.
+          properties:
+            id:
+              type: string
+              description: The ID of the parent price book.
+            displayName:
+              type: string
+              description: The display name of the parent price book.
+    PriceBookResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: The total number of price books.
+        limit:
+          type: integer
+          description: Maximum number of price books returned per request.
+        offset:
+          type: integer
+          description: The zero-based index of the first price book to included in the result.
+        data:
+          type: array
+          description: The list of price books.
+          items:
+            $ref: "#/components/schemas/PriceBook"
+    AcoTrackedChange:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the product change record.
+        deltaExportFile:
+          type: string
+          description: The delta export file name where this change was detected.
+        siteId:
+          type: string
+          description: The site ID of the entity that changed.
+        entityId:
+          type: string
+          description: The ID of the entity that changed.
+        priceBookId:
+          type: string
+          description: The ID of the price book that the entity belongs to if it is a price change.
+        type:
+          type: string
+          description: The type of entity that changed.
+        isDeleted:
+          type: boolean
+          description: Whether the entity was deleted.
+        lastModified:
+          type: string
+          description: The last modified timestamp of the entity.
+    AcoTrackedChangeResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: The total number of change records
+        limit:
+          type: integer
+          description: Maximum number of change records to return per request.
+        offset:
+          type: integer
+          description: The zero-based index of the first change record to include in the result.
+        pageSize:
+          type: integer
+          description: The number of change records returned in the response.
+        data:
+          type: array
+          description: The list of change records
+          items:
+            $ref: "#/components/schemas/AcoTrackedChange"
+
+security:
+  - AmOAuth2: ["c_aco"]
+
+paths:
+  /products:
+    post:
+      summary: Get products by IDs
+      operationId: getProducts
+      parameters:
+        - in: query
+          name: siteId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: locale
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductsRequest"
+      responses:
+        "200":
+          description: Successfully retrieved products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductsResponse"
+        "400":
+          description: Bad request - invalid parameters
+  /pricebooks:
+    get:
+      summary: Get all price books
+      operationId: getAllPriceBooks
+      parameters:
+        - in: query
+          name: siteId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: c_limit
+          description: Maximum number of price books to return per request.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - in: query
+          name: c_offset
+          description: The zero-based index of the first price book to include in the result.
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Successfully retrieved price books
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceBookResponse"
+  /pricebooks/{priceBookId}:
+    get:
+      summary: Get price book by ID
+      operationId: getPriceBookById
+      parameters:
+        - in: query
+          name: siteId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: path
+          name: priceBookId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Successfully retrieved price book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceBook"
+        "404":
+          description: Price book not found
+          content:
+            application/json:
+              examples:
+                not_found:
+                  value:
+                    {
+                      "type": "https://api.commercecloud.salesforce.com/documentation/error/v1/custom-errors/pricebook-not-found",
+                    }
+  /changes:
+    get:
+      summary: Get tracked entity change records
+      operationId: getAcoTrackedChanges
+      parameters:
+        - in: query
+          name: siteId
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: c_limit
+          description: Maximum number of change records to return per request.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - in: query
+          name: c_offset
+          description: The zero-based index of the first change record to include in the result.
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - in: query
+          name: c_type
+          required: false
+          description: The type of entity to filter for.
+          schema:
+            type: string
+            minLength: 1
+        - in: query
+          name: c_since
+          required: false
+          description: Return all changes since the specified ISO 8601 datetime.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Successfully retrieved products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductChangeRecordsResponse"
+        "400":
+          description: Bad request - invalid parameters

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+
+    <custom-type type-id="AcoTrackedChanges">
+        <display-name xml:lang="x-default">Product Change Record</display-name>
+        <description xml:lang="x-default">Records product id and timestamp of changed products
+            including price changes.</description>
+
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+
+        <key-definition attribute-id="ID">
+            <display-name xml:lang="x-default">Custom Object ID</display-name>
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+
+        <attribute-definitions>
+            <attribute-definition attribute-id="deltaExportFile">
+                <display-name xml:lang="x-default">Delta Export File</display-name>
+                <description xml:lang="x-default">The delta export filename where this change was
+                    detected.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
+            <attribute-definition attribute-id="entityId">
+                <display-name xml:lang="x-default">Entity ID</display-name>
+                <description xml:lang="x-default">The ID of the changed entity.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
+            <attribute-definition attribute-id="siteId">
+                <display-name xml:lang="x-default">Site ID</display-name>
+                <description xml:lang="x-default">The site ID of the changed entity.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
+            <attribute-definition attribute-id="priceBookId">
+                <display-name xml:lang="x-default">Price Book ID</display-name>
+                <description xml:lang="x-default">The price book ID of the changed price entity.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
+            <attribute-definition attribute-id="type">
+                <display-name xml:lang="x-default">Type</display-name>
+                <description xml:lang="x-default">The type of entity that was changed.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
+            <attribute-definition attribute-id="isDeleted">
+                <display-name xml:lang="x-default">Is Deleted</display-name>
+                <description xml:lang="x-default">Whether the entity was deleted.</description>
+                <type>boolean</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+
+        <group-definitions>
+            <attribute-group group-id="aco-change-info">
+                <display-name xml:lang="x-default">Adobe Commerce Optimizer Tracked Entity Change
+                    Information</display-name>
+                <description xml:lang="x-default">Information about the Adobe Commerce Optimizer
+                    tracked entity change.</description>
+                <attribute attribute-id="deltaExportFile" />
+                <attribute attribute-id="entityId" />
+                <attribute attribute-id="siteId" />
+                <attribute attribute-id="priceBookId" />
+                <attribute attribute-id="type" />
+                <attribute attribute-id="isDeleted" />
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+</metadata>

@@ -1,0 +1,24 @@
+{
+  "endpoints": [
+    {
+      "endpoint": "getProducts",
+      "schema": "schema.yaml",
+      "implementation": "products"
+    },
+    {
+      "endpoint": "getAllPriceBooks",
+      "schema": "schema.yaml",
+      "implementation": "pricebooks"
+    },
+    {
+      "endpoint": "getPriceBookById",
+      "schema": "schema.yaml",
+      "implementation": "pricebooks"
+    },
+    {
+      "endpoint": "getAcoTrackedChanges",
+      "schema": "schema.yaml",
+      "implementation": "changes"
+    }
+  ]
+}

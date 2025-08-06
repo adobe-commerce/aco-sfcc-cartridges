@@ -1,0 +1,8 @@
+{
+  "hostname": "{shortCode}.dx.commercecloud.salesforce.com",
+  "username": "",
+  "password": "",
+  "version": "version2",
+  "cartridge": ["int_adobe_commerce_optimizer"],
+  "cartridgesPath": "int_adobe_commerce_optimizer"
+}
