@@ -1,13 +1,15 @@
 const ArrayList = require("dw/util/ArrayList");
+const Bytes = require("dw/util/Bytes");
+const CatalogMgr = require("dw/catalog/CatalogMgr");
 const CustomObjectMgr = require("dw/object/CustomObjectMgr");
+const Encoding = require("dw/crypto/Encoding");
 const File = require("dw/io/File");
 const FileReader = require("dw/io/FileReader");
 const Logger = require("dw/system/Logger");
+const PricebookMgr = require("dw/catalog/PriceBookMgr");
 const Site = require("dw/system/Site");
 const Status = require("dw/system/Status");
 const Transaction = require("dw/system/Transaction");
-const Encoding = require("dw/crypto/Encoding");
-const Bytes = require("dw/util/Bytes");
 const XMLStreamConstants = require("dw/io/XMLStreamConstants");
 const XMLStreamReader = require("dw/io/XMLStreamReader");
 
@@ -17,7 +19,7 @@ const TRACKED_CHANGES_CUSTOM_OBJECT = "AcoTrackedChanges";
 
 const siteId = Site.getCurrent().getID();
 const trackedChanges = new ArrayList();
-let trackedChangesIterator;
+let trackedChangesIterator = new ArrayList().iterator();
 
 /**
  * Recursively deletes a directory and all its contents.
@@ -26,8 +28,14 @@ let trackedChangesIterator;
  */
 function deleteDirRecursively(dir) {
   if (dir.exists() && dir.isDirectory()) {
-    const files = dir.listFiles().toArray();
-    files.forEach((file) => {
+    const files = dir.listFiles();
+    if (!files) {
+      logger.info(
+        `[${siteId}] [deleteDirRecursively] No files found in ${dir.getFullPath()}. Nothing to delete.`
+      );
+      return;
+    }
+    files.toArray().forEach((file) => {
       if (file.isDirectory()) {
         deleteDirRecursively(file);
       } else {
@@ -66,21 +74,35 @@ function extractPriceBookChanges(zipFile) {
   const uuidDir = files.find((file) => file.isDirectory());
   if (!uuidDir) {
     logger.error(
-      "No UUID directory found in " +
-        zipFile.getFullPath() +
-        ". Nothing to process."
+      `[${siteId}] [extractPriceBookChanges] No UUID directory found in ${zipFile.getFullPath()}. Nothing to process.`
     );
     return [];
   }
+
+  // Get all price books for the current site
+  const sitePriceBooks = PricebookMgr.getSitePriceBooks().toArray();
+  const sitePriceBookIds = sitePriceBooks.map((priceBook) => priceBook.ID);
+  logger.info(
+    `[${siteId}] [extractPriceBookChanges] Site price book IDs: ${sitePriceBookIds}`
+  );
 
   const priceBookDir = new File(uuidDir, "pricebooks");
   if (priceBookDir.exists() && priceBookDir.isDirectory()) {
     // Get all price book files in the 000001/{uuid}/pricebooks/ directory
     const priceBookFiles = priceBookDir.listFiles().toArray();
     priceBookFiles.forEach((priceBookFile) => {
+      // Skip if the price book does not apply to the current site
+      let priceBookFileName = priceBookFile.getName().replace(".xml", "");
+      if (!sitePriceBookIds.includes(priceBookFileName)) {
+        logger.info(
+          `[${siteId}] [extractPriceBookChanges] Price Book ${priceBookFileName} does not apply to the current site: ${siteId}. Skipping...`
+        );
+        return;
+      }
+
       if (priceBookFile.exists()) {
         logger.info(
-          "Processing price book XML file: " + priceBookFile.getFullPath()
+          `[${siteId}] [extractPriceBookChanges] Processing price book XML file: ${priceBookFile.getFullPath()}`
         );
         const fileReader = new FileReader(priceBookFile);
         const xmlStreamReader = new XMLStreamReader(fileReader);
@@ -142,22 +164,41 @@ function extractCatalogChanges(zipFile) {
   const uuidDir = files.find((file) => file.isDirectory());
   if (!uuidDir) {
     logger.error(
-      "No UUID directory found in " +
-        zipFile.getFullPath() +
-        ". Nothing to process."
+      `[${siteId}] [extractCatalogChanges] No UUID directory found in ${zipFile.getFullPath()}. Nothing to process.`
     );
     return [];
   }
+
+  // Get the catalog for the current site
+  const siteCatalog = CatalogMgr.getSiteCatalog();
+  if (!siteCatalog) {
+    logger.info(
+      `[${siteId}] [extractCatalogChanges] No site catalog found for site: ${siteId}. Nothing to process.`
+    );
+    return [];
+  }
+  logger.info(
+    `[${siteId}] [extractCatalogChanges] Site catalog ID: ${siteCatalog.ID}`
+  );
 
   const catalogDir = new File(uuidDir, "catalogs");
   if (catalogDir.exists() && catalogDir.isDirectory()) {
     const catalogChildDirs = getChildDirs(catalogDir);
     // Get all child directories in the 000001/{uuid}/catalogs/ directory
     catalogChildDirs.forEach((childDir) => {
+      // Skip if the catalog does not apply to the current site
+      if (childDir.getName() !== siteCatalog.ID) {
+        logger.info(
+          `[${siteId}] [extractCatalogChanges] Catalog ${childDir.getName()} does not apply to the current site: ${siteId}. Skipping...`
+        );
+        return;
+      }
       // Get the catalog.xml file in the child (catalogId) directory
       const catalogXml = new File(childDir, "catalog.xml");
       if (catalogXml.exists()) {
-        logger.info("Processing catalog XML file: " + catalogXml.getFullPath());
+        logger.info(
+          `[${siteId}] [extractCatalogChanges] Processing catalog XML file: ${catalogXml.getFullPath()}`
+        );
         const fileReader = new FileReader(catalogXml);
         const xmlStreamReader = new XMLStreamReader(fileReader);
         while (xmlStreamReader.hasNext()) {
@@ -195,21 +236,21 @@ function extractCatalogChanges(zipFile) {
  * @param {dw.job.JobStepExecution} stepExecution - The step execution object.
  */
 exports.beforeStep = function (parameters, stepExecution) {
-  logger.info("Extracting delta export files");
+  logger.info(`[${siteId}] [beforeStep] Extracting delta export files`);
 
   const consumer = parameters.consumer;
   const deltaExportJobName = parameters.deltaExportJobName;
   const deltaExportPath = `${File.IMPEX}/src/platform/outbox/${consumer}/${deltaExportJobName}`;
-  logger.info("Consumer: " + consumer);
-  logger.info("Delta Export Job Name: " + deltaExportJobName);
-  logger.info("Delta Export Path: " + deltaExportPath);
+  logger.info(`[${siteId}] [beforeStep] Consumer: ${consumer}`);
+  logger.info(
+    `[${siteId}] [beforeStep] Delta Export Job Name: ${deltaExportJobName}`
+  );
+  logger.info(`[${siteId}] [beforeStep] Delta Export Path: ${deltaExportPath}`);
 
   let deltaExportDir = new File(deltaExportPath);
   if (!deltaExportDir.exists()) {
     logger.info(
-      "Delta export directory does not exist: " +
-        deltaExportDir.getFullPath() +
-        ". No changes to process."
+      `[${siteId}] [beforeStep] Delta export directory does not exist: ${deltaExportDir.getFullPath()}. No changes to process.`
     );
     return;
   }
@@ -220,25 +261,25 @@ exports.beforeStep = function (parameters, stepExecution) {
     .sort();
   if (deltaExportFiles.length === 0) {
     logger.info(
-      "No delta export files found in " +
-        deltaExportDir.getFullPath() +
-        ". No changes to process."
+      `[${siteId}] [beforeStep] No delta export files found in ${deltaExportDir.getFullPath()}. No changes to process.`
     );
     return;
   }
 
   logger.info(
-    "Found " + deltaExportFiles.length + " delta export files to process."
+    `[${siteId}] [beforeStep] Found ${deltaExportFiles.length} delta export files to process.`
   );
 
-  let tempDir = new File(deltaExportDir, "_aco_temp");
+  let tempDir = new File(deltaExportDir, `_aco_temp_${siteId}`);
   try {
     if (tempDir.exists()) {
       deleteDirRecursively(tempDir);
     }
     tempDir.mkdir();
     deltaExportFiles.forEach((file) => {
-      logger.info("Processing delta export file: " + file);
+      logger.info(
+        `[${siteId}] [beforeStep] Processing delta export file: ${file}`
+      );
 
       let currentFile = new File(deltaExportDir, file);
       let currentTempDir = new File(
@@ -255,8 +296,10 @@ exports.beforeStep = function (parameters, stepExecution) {
     });
     trackedChangesIterator = trackedChanges.iterator();
   } catch (error) {
-    logger.error("Error processing delta export files: " + error.message);
-    return;
+    logger.error(
+      `[${siteId}] [beforeStep] Error processing delta export files: ${error.message}`
+    );
+    throw error;
   } finally {
     deleteDirRecursively(tempDir);
   }
@@ -269,7 +312,11 @@ exports.beforeStep = function (parameters, stepExecution) {
  * @param {dw.job.JobStepExecution} stepExecution - The step execution object.
  */
 exports.getTotalCount = function (parameters, stepExecution) {
-  return trackedChanges.size();
+  const totalCount = trackedChanges.size();
+  logger.info(
+    `[${siteId}] [getTotalCount] Total changes to process: ${totalCount}`
+  );
+  return totalCount;
 };
 
 /**
@@ -279,9 +326,11 @@ exports.getTotalCount = function (parameters, stepExecution) {
  * @param {dw.job.JobStepExecution} stepExecution - The step execution object.
  */
 exports.read = function (parameters, stepExecution) {
-  if (trackedChangesIterator.hasNext()) {
+  if (trackedChangesIterator && trackedChangesIterator.hasNext()) {
     return trackedChangesIterator.next();
   }
+  logger.info(`[${siteId}] [read] No more changes to process.`);
+  return null;
 };
 
 /**
@@ -293,11 +342,15 @@ exports.read = function (parameters, stepExecution) {
  */
 exports.process = function (changeRecord, parameters, stepExecution) {
   if (!changeRecord || !changeRecord.entityId) {
-    logger.info("Change record is empty, skipping process function.");
+    logger.info(
+      `[${siteId}] [process] Change record is empty, skipping process function.`
+    );
     return;
   }
 
-  logger.debug("Saving change record: " + changeRecord.entityId);
+  logger.debug(
+    `[${siteId}] [process] Saving change record: ${changeRecord.entityId}`
+  );
   const idString = `${changeRecord.deltaExportFile}_${siteId}_${changeRecord.type}_${changeRecord.entityId}_${changeRecord.priceBookId}`;
   const customObjectID = Encoding.toBase64(new Bytes(idString, "UTF-8"));
   try {
@@ -322,10 +375,7 @@ exports.process = function (changeRecord, parameters, stepExecution) {
           changeRecord.deltaExportFile;
         if (!shouldUpdate) {
           logger.debug(
-            "Skipping change record " +
-              changeRecord.entityId +
-              " - already processed from delta export file: " +
-              changeRecord.deltaExportFile
+            `[${siteId}] [process] Skipping change record ${changeRecord.entityId} - already processed from delta export file: ${changeRecord.deltaExportFile}`
           );
         }
       }
@@ -341,7 +391,9 @@ exports.process = function (changeRecord, parameters, stepExecution) {
       }
     });
   } catch (error) {
-    logger.error("Error processing " + customObjectID + ": " + error.message);
+    logger.error(
+      `[${siteId}] [process] Error processing ${customObjectID}: ${error.message}`
+    );
   }
 };
 
@@ -362,7 +414,10 @@ exports.write = function (changeRecords, parameters, stepExecution) {};
  */
 exports.afterStep = function (success, parameters, stepExecution) {
   if (!success) {
-    return new Status(Status.ERROR, "Job failed");
+    return new Status(Status.ERROR, `[${siteId}] [afterStep] Job failed`);
   }
-  return new Status(Status.OK, "Job completed successfully");
+  return new Status(
+    Status.OK,
+    `[${siteId}] [afterStep] Job completed successfully`
+  );
 };

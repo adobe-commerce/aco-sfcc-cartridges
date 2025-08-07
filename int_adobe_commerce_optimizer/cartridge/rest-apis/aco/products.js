@@ -61,10 +61,12 @@ function getCustomAttributes(product) {
             }
           }
 
-          attributes.push({
-            id: attribute.getID(),
-            values: values,
-          });
+          if (values.length > 0) {
+            attributes.push({
+              id: attribute.getID(),
+              values: values,
+            });
+          }
         });
     });
   }

@@ -1,6 +1,11 @@
 {
   "endpoints": [
     {
+      "endpoint": "getSiteCatalog",
+      "schema": "schema.yaml",
+      "implementation": "catalog"
+    },
+    {
       "endpoint": "getProducts",
       "schema": "schema.yaml",
       "implementation": "products"

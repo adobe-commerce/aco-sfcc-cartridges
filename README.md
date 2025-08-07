@@ -8,9 +8,10 @@ This custom SFCC Cartridge is required to enable functionality in the [ACO SFCC 
 
 This cartridge (`int_adobe_commerce_optimizer`) creates custom REST API endpoints using the Salesforce Commerce API (SCAPI) framework:
 
-1. **Price Books API** - Retrieve price book information (including hierarchy) for a site.
-2. **Products API** - Retrieve detailed product and price (per price book) information by product IDs.
-3. **ACO Tracked Changes API** - Retrieve information about product, price book, and price information that has recently been changed in SFCC.
+1. **Site Catalog API** - Retrieve information about the catalog assigned to the given site.
+2. **Price Books API** - Retrieve price book information (including hierarchy) for a site.
+3. **Products API** - Retrieve detailed product and price (per price book) information by product IDs.
+4. **ACO Tracked Changes API** - Retrieve information about product, price book, and price information that has recently been changed in SFCC.
 
 ## Documentation & Resources
 
