@@ -163,6 +163,20 @@ function getVariantsForMasterProduct(product) {
   });
 }
 
+function getVariationValuesForVariant(product) {
+  if (!(product.isVariant && product.isVariant())) {
+    return {};
+  }
+  const variationValues = {};
+  if (product.variationModel) {
+    const attrs = product.variationModel.getProductVariationAttributes().toArray();
+    attrs.forEach(attr => {
+      variationValues[attr.getID()] = product.variationModel.getVariationValue(product, attr);
+    });
+  }
+  return variationValues;
+}
+
 exports.getProducts = function () {
   const requestBody = JSON.parse(request.httpParameterMap.requestBodyAsString);
   const ids = requestBody.ids;
@@ -235,6 +249,7 @@ exports.getProducts = function () {
         //TODO: set only if not empty?
         variationAttributes: getVariationAttributes(product),
         variants: getVariantsForMasterProduct(product),
+        variationValues: getVariationValuesForVariant(product)
       };
       products.push(productData);
     } catch (e) {

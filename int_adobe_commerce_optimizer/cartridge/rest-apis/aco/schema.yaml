@@ -237,6 +237,11 @@ components:
           description: List of variation attributes for master products.
           items:
             $ref: "#/components/schemas/VariationAttribute"
+        variationValues:
+          type: object
+          description: Key-value pairs of variation attribute IDs and their values for this variant product. Only present for variant products.
+          additionalProperties:
+            type: string
         variants:
           type: array
           description: List of variant products for this master product. Each variant includes its productId, orderable status, and variationValues describing the specific attribute values for the variant.
