@@ -105,7 +105,9 @@ function getImages(product) {
 }
 
 function getProductType(product) {
-  if (product.isMaster && product.isMaster()) {
+  if (product.isItem && product.isItem()) {
+    return "SIMPLE";
+  } else if (product.isMaster && product.isMaster()) {
     return "MASTER";
   } else if (product.isVariant && product.isVariant()) {
     return "VARIANT";
@@ -139,6 +141,26 @@ function getVariationAttributes(product) {
     }));
   }
   return variationAttributes;
+}
+
+function getVariantsForMasterProduct(product) {
+  if (!(product.isMaster && product.isMaster())) {
+    return [];
+  }
+  return product.getVariants().toArray().map(variant => {
+    const variationValues = {};
+    if (product.variationModel) {
+      const attrs = product.variationModel.getProductVariationAttributes().toArray();
+      attrs.forEach(attr => {
+        variationValues[attr.getID()] = variant.variationModel.getVariationValue(variant, attr);
+      });
+    }
+    return {
+      productId: variant.getID(),
+      orderable: variant.isOrderable(),
+      variationValues: variationValues
+    };
+  });
 }
 
 exports.getProducts = function () {
@@ -210,7 +232,9 @@ exports.getProducts = function () {
         creationDate: product.getCreationDate().toISOString(),
         lastModified: product.getLastModified().toISOString(),
         type: getProductType(product),
+        //TODO: set only if not empty?
         variationAttributes: getVariationAttributes(product),
+        variants: getVariantsForMasterProduct(product),
       };
       products.push(productData);
     } catch (e) {

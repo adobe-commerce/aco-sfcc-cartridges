@@ -141,6 +141,21 @@ components:
         value:
           type: string
           description: The value itself.
+    Variant:
+        type: object
+        description: A variant product for a master product.
+        properties:
+          orderable:
+            type: boolean
+            description: Indicates if the variant is orderable.
+          productId:
+            type: string
+            description: The ID of the variant product.
+          variationValues:
+            type: object
+            description: Key-value pairs of variation attribute IDs and their values for this variant.
+            additionalProperties:
+              type: string
     Product:
       type: object
       properties:
@@ -222,6 +237,11 @@ components:
           description: List of variation attributes for master products.
           items:
             $ref: "#/components/schemas/VariationAttribute"
+        variants:
+          type: array
+          description: List of variant products for this master product. Each variant includes its productId, orderable status, and variationValues describing the specific attribute values for the variant.
+          items:
+            $ref: "#/components/schemas/Variant"
     ProductsResponse:
       type: object
       properties:
