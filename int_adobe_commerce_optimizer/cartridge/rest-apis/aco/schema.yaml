@@ -94,6 +94,53 @@ components:
         absUrl:
           type: string
           description: An absolute URL to the referenced media file. The protocol for the reference is the current protocol of the current HTTP request.
+    VariationAttribute:
+      type: object
+      properties:
+        attributeDefinitionId:
+          type: string
+          description: The ID of the variation attribute definition.
+        attributeDefinitionName:
+          type: string
+          description: The display name of the variation attribute definition.
+        id:
+          type: string
+          description: The ID of the variation attribute.
+        name:
+          type: string
+          description: The display name of the variation attribute.
+        shared:
+          type: boolean
+          description: Whether the attribute is shared.
+        slicing:
+          type: boolean
+          description: Whether the attribute is slicing.
+        values:
+          type: array
+          description: The possible values for this variation attribute.
+          items:
+            $ref: "#/components/schemas/VariationAttributeValue"
+        variationAttributeType:
+          type: string
+          description: The type of the variation attribute.
+    VariationAttributeValue:
+      type: object
+      properties:
+        description:
+          type: string
+          description: The description of the variation attribute value.
+        name:
+          type: string
+          description: The display name of the variation attribute value.
+        orderable:
+          type: boolean
+          description: Whether this value is orderable.
+        position:
+          type: number
+          description: The position of the value in the list.
+        value:
+          type: string
+          description: The value itself.
     Product:
       type: object
       properties:
@@ -166,6 +213,15 @@ components:
           description: Returns all images assigned to this product for a specific view type, e.g. all 'thumbnail' images. The images are returned in the order of their index number ascending. When called for a master the method returns the images specific to the master, which are typically the fall back images.
           items:
             $ref: "#/components/schemas/ProductImage"
+        type:
+          type: string
+          description: The type of the product. One of SIMPLE, MASTER, VARIANT, BUNDLE, SET.
+          enum: [SIMPLE, MASTER, VARIANT, BUNDLE, SET]
+        variationAttributes:
+          type: array
+          description: List of variation attributes for master products.
+          items:
+            $ref: "#/components/schemas/VariationAttribute"
     ProductsResponse:
       type: object
       properties:

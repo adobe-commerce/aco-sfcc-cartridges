@@ -104,6 +104,43 @@ function getImages(product) {
   return images;
 }
 
+function getProductType(product) {
+  if (product.isMaster && product.isMaster()) {
+    return "MASTER";
+  } else if (product.isVariant && product.isVariant()) {
+    return "VARIANT";
+  } else if (product.isBundle && product.isBundle()) {
+    return "BUNDLE";
+  } else if (product.isSet && product.isSet()) {
+    return "SET";
+  }
+  return null;
+}
+
+function getVariationAttributes(product) {
+  let variationAttributes = [];
+  if (product.variationModel && product.variationModel.hasVariants()) {
+    const va = product.variationModel.getProductVariationAttributes().toArray();
+    variationAttributes = va.map(attr => ({
+      attributeDefinitionId: attr.getID(),
+      attributeDefinitionName: attr.getDisplayName(),
+      id: attr.getID(),
+      name: attr.getDisplayName(),
+      shared: attr.isShared(),
+      slicing: attr.isSlicing ? attr.isSlicing() : false,
+      values: attr.getValues().toArray().map(val => ({
+        description: val.getDescription(),
+        name: val.getDisplayValue(),
+        orderable: false, // SFCC does not expose this directly
+        position: val.getPosition ? val.getPosition() : null,
+        value: val.getValue()
+      })),
+      variationAttributeType: attr.getValueType()
+    }));
+  }
+  return variationAttributes;
+}
+
 exports.getProducts = function () {
   const requestBody = JSON.parse(request.httpParameterMap.requestBodyAsString);
   const ids = requestBody.ids;
@@ -172,6 +209,8 @@ exports.getProducts = function () {
         images: getImages(product),
         creationDate: product.getCreationDate().toISOString(),
         lastModified: product.getLastModified().toISOString(),
+        type: getProductType(product),
+        variationAttributes: getVariationAttributes(product),
       };
       products.push(productData);
     } catch (e) {
