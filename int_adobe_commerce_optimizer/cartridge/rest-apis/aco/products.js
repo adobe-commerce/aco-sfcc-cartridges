@@ -105,76 +105,66 @@ function getImages(product) {
 }
 
 function getProductType(product) {
-  if (product.isItem && product.isItem()) {
-    return "SIMPLE";
-  } else if (product.isMaster && product.isMaster()) {
-    return "MASTER";
-  } else if (product.isVariant && product.isVariant()) {
-    return "VARIANT";
-  } else if (product.isBundle && product.isBundle()) {
-    return "BUNDLE";
-  } else if (product.isSet && product.isSet()) {
-    return "SET";
-  }
-  return null;
+  if (product.isMaster()) return "MASTER";
+  else if (product.isVariant()) return "VARIANT";
+  else if (product.isVariationGroup()) return "VARIATION_GROUP";
+  else if (product.isBundle()) return "BUNDLE";
+  else if (product.isBundled()) return "BUNDLED";
+  else if (product.isProductSet()) return "PRODUCT_SET";
+  else if (product.isProductSetProduct()) return "PRODUCT_SET_PRODUCT";
+  else return "SIMPLE";
 }
 
 function getVariationAttributes(product) {
   let variationAttributes = [];
-  if (product.variationModel && product.variationModel.hasVariants()) {
-    const va = product.variationModel.getProductVariationAttributes().toArray();
-    variationAttributes = va.map(attr => ({
-      attributeDefinitionId: attr.getID(),
-      attributeDefinitionName: attr.getDisplayName(),
-      id: attr.getID(),
-      name: attr.getDisplayName(),
-      shared: attr.isShared(),
-      slicing: attr.isSlicing ? attr.isSlicing() : false,
-      values: attr.getValues().toArray().map(val => ({
-        description: val.getDescription(),
-        name: val.getDisplayValue(),
-        orderable: false, // SFCC does not expose this directly
-        position: val.getPosition ? val.getPosition() : null,
-        value: val.getValue()
-      })),
-      variationAttributeType: attr.getValueType()
-    }));
+  if (product.variationModel) {
+    const attrs = product.variationModel.getProductVariationAttributes().toArray();
+    if (attrs.length > 0) {
+      variationAttributes = attrs.map(attr => ({
+        id: attr.getID(),
+        attributeId: attr.getAttributeID(),
+        name: attr.getDisplayName(),
+        values: product.variationModel.getAllValues(attr).toArray().map(val => ({
+          description: val.getDescription(),
+          name: val.getDisplayValue(),
+          value: val.getValue()
+        })),
+      }));
+    }
   }
   return variationAttributes;
 }
 
 function getVariantsForMasterProduct(product) {
-  if (!(product.isMaster && product.isMaster())) {
+  if (!product.isMaster()) {
     return [];
   }
   return product.getVariants().toArray().map(variant => {
-    const variationValues = {};
-    if (product.variationModel) {
-      const attrs = product.variationModel.getProductVariationAttributes().toArray();
-      attrs.forEach(attr => {
-        variationValues[attr.getID()] = variant.variationModel.getVariationValue(variant, attr);
-      });
-    }
+    const variationValues = getVariationValuesForVariant(variant);
     return {
       productId: variant.getID(),
-      orderable: variant.isOrderable(),
       variationValues: variationValues
     };
   });
 }
 
 function getVariationValuesForVariant(product) {
-  if (!(product.isVariant && product.isVariant())) {
-    return {};
-  }
   const variationValues = {};
   if (product.variationModel) {
     const attrs = product.variationModel.getProductVariationAttributes().toArray();
     attrs.forEach(attr => {
-      variationValues[attr.getID()] = product.variationModel.getVariationValue(product, attr);
-    });
+      const val = product.variationModel.getVariationValue(product, attr);
+      variationValues[attr.getID()] = val ? val.getValue() : null;
+   });
   }
   return variationValues;
+}
+
+function getMasterInfoForVariant(product) {
+  const masterProduct = product.variationModel.getMaster();
+  return masterProduct ? {
+    id: masterProduct.getID(),
+  } : null;
 }
 
 exports.getProducts = function () {
@@ -247,10 +237,14 @@ exports.getProducts = function () {
         lastModified: product.getLastModified().toISOString(),
         type: getProductType(product),
         //TODO: set only if not empty?
-        variationAttributes: getVariationAttributes(product),
-        variants: getVariantsForMasterProduct(product),
-        variationValues: getVariationValuesForVariant(product)
+        variationAttributes: getVariationAttributes(product)
       };
+      if (product.isMaster()) {
+        productData.variants = getVariantsForMasterProduct(product);
+      } else if (product.isVariant()) {
+        productData.variationValues = getVariationValuesForVariant(product);
+        productData.master = getMasterInfoForVariant(product);
+      }
       products.push(productData);
     } catch (e) {
       logger.error(

@@ -247,6 +247,13 @@ components:
           description: List of variant products for this master product. Each variant includes its productId, orderable status, and variationValues describing the specific attribute values for the variant.
           items:
             $ref: "#/components/schemas/Variant"
+        master:
+          type: object
+          description: Information about the master product for this variant.
+          properties:
+            id:
+              type: string
+              description: The ID of the master product.
     ProductsResponse:
       type: object
       properties:
