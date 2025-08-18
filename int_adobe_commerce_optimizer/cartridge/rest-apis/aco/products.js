@@ -236,7 +236,6 @@ exports.getProducts = function () {
         creationDate: product.getCreationDate().toISOString(),
         lastModified: product.getLastModified().toISOString(),
         type: getProductType(product),
-        //TODO: set only if not empty?
         variationAttributes: getVariationAttributes(product)
       };
       if (product.isMaster()) {

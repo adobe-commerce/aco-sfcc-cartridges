@@ -230,8 +230,8 @@ components:
             $ref: "#/components/schemas/ProductImage"
         type:
           type: string
-          description: The type of the product. One of SIMPLE, MASTER, VARIANT, BUNDLE, SET.
-          enum: [SIMPLE, MASTER, VARIANT, BUNDLE, SET]
+          description: The type of the product. One of SIMPLE, MASTER, VARIANT, VARIATION_GROUP, BUNDLE, BUNDLED, PRODUCT_SET, PRODUCT_SET_PRODUCT.
+          enum: [SIMPLE, MASTER, VARIANT, VARIATION_GROUP, BUNDLE, BUNDLED, PRODUCT_SET, PRODUCT_SET_PRODUCT]
         variationAttributes:
           type: array
           description: List of variation attributes for master products.
