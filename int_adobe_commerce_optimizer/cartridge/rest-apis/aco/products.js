@@ -104,6 +104,69 @@ function getImages(product) {
   return images;
 }
 
+function getProductType(product) {
+  if (product.isMaster()) return "MASTER";
+  else if (product.isVariant()) return "VARIANT";
+  else if (product.isVariationGroup()) return "VARIATION_GROUP";
+  else if (product.isBundle()) return "BUNDLE";
+  else if (product.isBundled()) return "BUNDLED";
+  else if (product.isProductSet()) return "PRODUCT_SET";
+  else if (product.isProductSetProduct()) return "PRODUCT_SET_PRODUCT";
+  else return "SIMPLE";
+}
+
+function getVariationAttributes(product) {
+  let variationAttributes = [];
+  if (product.variationModel) {
+    const attrs = product.variationModel.getProductVariationAttributes().toArray();
+    if (attrs.length > 0) {
+      variationAttributes = attrs.map(attr => ({
+        id: attr.getID(),
+        attributeId: attr.getAttributeID(),
+        name: attr.getDisplayName(),
+        values: product.variationModel.getAllValues(attr).toArray().map(val => ({
+          description: val.getDescription(),
+          name: val.getDisplayValue(),
+          value: val.getValue()
+        })),
+      }));
+    }
+  }
+  return variationAttributes;
+}
+
+function getVariantsForMasterProduct(product) {
+  if (!product.isMaster()) {
+    return [];
+  }
+  return product.getVariants().toArray().map(variant => {
+    const variationValues = getVariationValuesForVariant(variant);
+    return {
+      productId: variant.getID(),
+      variationValues: variationValues
+    };
+  });
+}
+
+function getVariationValuesForVariant(product) {
+  const variationValues = {};
+  if (product.variationModel) {
+    const attrs = product.variationModel.getProductVariationAttributes().toArray();
+    attrs.forEach(attr => {
+      const val = product.variationModel.getVariationValue(product, attr);
+      variationValues[attr.getID()] = val ? val.getValue() : null;
+   });
+  }
+  return variationValues;
+}
+
+function getMasterInfoForVariant(product) {
+  const masterProduct = product.variationModel.getMaster();
+  return masterProduct ? {
+    id: masterProduct.getID(),
+  } : null;
+}
+
 exports.getProducts = function () {
   const requestBody = JSON.parse(request.httpParameterMap.requestBodyAsString);
   const ids = requestBody.ids;
@@ -172,7 +235,15 @@ exports.getProducts = function () {
         images: getImages(product),
         creationDate: product.getCreationDate().toISOString(),
         lastModified: product.getLastModified().toISOString(),
+        type: getProductType(product),
+        variationAttributes: getVariationAttributes(product)
       };
+      if (product.isMaster()) {
+        productData.variants = getVariantsForMasterProduct(product);
+      } else if (product.isVariant()) {
+        productData.variationValues = getVariationValuesForVariant(product);
+        productData.master = getMasterInfoForVariant(product);
+      }
       products.push(productData);
     } catch (e) {
       logger.error(
