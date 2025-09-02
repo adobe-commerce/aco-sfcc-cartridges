@@ -16,6 +16,16 @@
         </key-definition>
 
         <attribute-definitions>
+            <attribute-definition attribute-id="deltaExportFile">
+                <display-name xml:lang="x-default">Delta Export File</display-name>
+                <description xml:lang="x-default">The delta export filename where this change was
+                    detected.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
             <attribute-definition attribute-id="entityId">
                 <display-name xml:lang="x-default">Entity ID</display-name>
                 <description xml:lang="x-default">The ID of the changed entity.</description>
@@ -60,15 +70,6 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
             </attribute-definition>
-            <attribute-definition attribute-id="deltaExportFile">
-                <display-name xml:lang="x-default">Delta Export File</display-name>
-                <description xml:lang="x-default">The delta export filename where this change was
-                    detected.</description>
-                <type>string</type>
-                <localizable-flag>false</localizable-flag>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-            </attribute-definition>
         </attribute-definitions>
 
         <group-definitions>
@@ -77,12 +78,12 @@
                     Information</display-name>
                 <description xml:lang="x-default">Information about the Adobe Commerce Optimizer
                     tracked entity change.</description>
+                <attribute attribute-id="deltaExportFile" />
                 <attribute attribute-id="entityId" />
                 <attribute attribute-id="siteId" />
                 <attribute attribute-id="priceBookId" />
                 <attribute attribute-id="type" />
                 <attribute attribute-id="isDeleted" />
-                <attribute attribute-id="deltaExportFile" />
             </attribute-group>
         </group-definitions>
     </custom-type>
