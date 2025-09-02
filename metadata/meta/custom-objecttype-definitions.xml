@@ -16,16 +16,6 @@
         </key-definition>
 
         <attribute-definitions>
-            <attribute-definition attribute-id="deltaExportFile">
-                <display-name xml:lang="x-default">Delta Export File</display-name>
-                <description xml:lang="x-default">The delta export filename where this change was
-                    detected.</description>
-                <type>string</type>
-                <localizable-flag>false</localizable-flag>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-            </attribute-definition>
-
             <attribute-definition attribute-id="entityId">
                 <display-name xml:lang="x-default">Entity ID</display-name>
                 <description xml:lang="x-default">The ID of the changed entity.</description>
@@ -70,6 +60,15 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
             </attribute-definition>
+            <attribute-definition attribute-id="deltaExportFile">
+                <display-name xml:lang="x-default">Delta Export File</display-name>
+                <description xml:lang="x-default">The delta export filename where this change was
+                    detected.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
         </attribute-definitions>
 
         <group-definitions>
@@ -78,12 +77,63 @@
                     Information</display-name>
                 <description xml:lang="x-default">Information about the Adobe Commerce Optimizer
                     tracked entity change.</description>
-                <attribute attribute-id="deltaExportFile" />
                 <attribute attribute-id="entityId" />
                 <attribute attribute-id="siteId" />
                 <attribute attribute-id="priceBookId" />
                 <attribute attribute-id="type" />
                 <attribute attribute-id="isDeleted" />
+                <attribute attribute-id="deltaExportFile" />
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+
+    <custom-type type-id="AcoProcessedFiles">
+        <display-name xml:lang="x-default">Adobe Commerce Optimizer Processed Files</display-name>
+        <description xml:lang="x-default">Records the Delta Export files that have been processed as
+            part of the Adobe Commerce Optimizer
+            Tracked Changes job.
+        </description>
+
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+
+        <key-definition attribute-id="ID">
+            <display-name xml:lang="x-default">Custom Object ID</display-name>
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+
+        <attribute-definitions>
+            <attribute-definition attribute-id="siteId">
+                <display-name xml:lang="x-default">Site ID</display-name>
+                <description xml:lang="x-default">The site ID of the job execution.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+
+            <attribute-definition attribute-id="deltaExportFile">
+                <display-name xml:lang="x-default">Delta Export File</display-name>
+                <description xml:lang="x-default">The delta export filename that was processed by
+                    the AdobeCommerceOptimizerTrackedChanges job.</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </attribute-definitions>
+
+        <group-definitions>
+            <attribute-group group-id="aco-processed-files-info">
+                <display-name xml:lang="x-default">Adobe Commerce Optimizer
+                    Processed Files</display-name>
+                <description xml:lang="x-default">Records the Delta Export files that have been
+                    processed as
+                    part of the Adobe Commerce Optimizer
+                    Tracked Changes job.</description>
+                <attribute attribute-id="siteId" />
+                <attribute attribute-id="deltaExportFile" />
             </attribute-group>
         </group-definitions>
     </custom-type>

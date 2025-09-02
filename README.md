@@ -149,12 +149,17 @@ The API endpoints require OAuth2 authentication with the `c_aco` scope:
 
 ![Delta Exports Schedule](/docs/images/delta_exports_schedule.png)
 
-2. Import the `jobs.xml` file in Business Manager found in the `metadata` directory.
+2. Import the `custom-objecttype-definitions.xml` file in Business Manager found in the `metadata/meta` directory.
+   1. Naviate to **Administration -> Site Development -> Import & Export** and click **Upload** under the **Import & Export Files** section.
+   2. Validate and upload the `custom-objecttype-definitions.xml` file.
+   3. Click **Import** under the **Meta Data** section.
+   4. Import the custom object type definitions file.
+3. Import the `jobs.xml` file in Business Manager found in the `metadata` directory.
    1. Naviate to **Administration -> Operations -> Import & Export** and click **Upload** under the **Import & Export Files** section.
    2. Validate and upload the `jobs.xml` file.
    3. Click **Import** under the **Jobs** section.
    4. Import the uploaded jobs file.
-3. Configure the **AdobeCommerceOptimizerTrackedChanges** job
+4. Configure the **AdobeCommerceOptimizerTrackedChanges** job
    1. Naviate to **Administration -> Operations -> Jobs** and select the **AdobeCommerceOptimizerTrackedChanges** job.
    2. Click the **Job Steps** tab.
    3. Click **Job Parameters**.
