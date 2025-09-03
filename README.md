@@ -122,7 +122,7 @@ The API endpoints require OAuth2 authentication with the `c_aco` scope:
 
 ### Enable the Cartridge
 
-1. In Business Manager, naviate to **Administration -> Sites -> Manage Sites**.
+1. In Business Manager, Navigate to **Administration -> Sites -> Manage Sites**.
 2. Click the Site that will be synchronized with Adobe Commerce Optimizer.
 3. Click the **Settings** tab.
 4. Add `int_adobe_commerce_optimizer` to the list of enabled **Cartridges**.
@@ -132,7 +132,7 @@ The API endpoints require OAuth2 authentication with the `c_aco` scope:
 **Important Note:** [Delta Exports](https://help.salesforce.com/s/articleView?language=en_US&id=cc.b2c_delta_exports.htm&type=5) functionality is required to be enabled in order for ACO to pick up changes made to SFCC entities. You may need to contact Salesforce support to enabled **Delta Exports** on your instance if it is not already.
 
 1. Check the **Delta Exports** configuration
-   1. Naviate to **Administration -> Site Development -> Delta Exports**
+   1. Navigate to **Administration -> Site Development -> Delta Exports**
       1. Click the **New** button.
       2. Name the export `aco_delta_exports`.
       3. Click **Create** to continue.
@@ -150,17 +150,17 @@ The API endpoints require OAuth2 authentication with the `c_aco` scope:
 ![Delta Exports Schedule](/docs/images/delta_exports_schedule.png)
 
 2. Import the `custom-objecttype-definitions.xml` file in Business Manager found in the `metadata/meta` directory.
-   1. Naviate to **Administration -> Site Development -> Import & Export** and click **Upload** under the **Import & Export Files** section.
+   1. Navigate to **Administration -> Site Development -> Import & Export** and click **Upload** under the **Import & Export Files** section.
    2. Validate and upload the `custom-objecttype-definitions.xml` file.
    3. Click **Import** under the **Meta Data** section.
    4. Import the custom object type definitions file.
 3. Import the `jobs.xml` file in Business Manager found in the `metadata` directory.
-   1. Naviate to **Administration -> Operations -> Import & Export** and click **Upload** under the **Import & Export Files** section.
+   1. Navigate to **Administration -> Operations -> Import & Export** and click **Upload** under the **Import & Export Files** section.
    2. Validate and upload the `jobs.xml` file.
    3. Click **Import** under the **Jobs** section.
    4. Import the uploaded jobs file.
 4. Configure the **AdobeCommerceOptimizerTrackedChanges** job
-   1. Naviate to **Administration -> Operations -> Jobs** and select the **AdobeCommerceOptimizerTrackedChanges** job.
+   1. Navigate to **Administration -> Operations -> Jobs** and select the **AdobeCommerceOptimizerTrackedChanges** job.
    2. Click the **Job Steps** tab.
    3. Click **Job Parameters**.
    4. Confirm the `consumer` and `deltaExportJobName` match the details defined in the **Delta Exports** configured above.
