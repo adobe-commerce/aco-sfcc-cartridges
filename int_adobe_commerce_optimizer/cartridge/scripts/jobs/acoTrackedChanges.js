@@ -27,10 +27,75 @@ const XMLStreamReader = require("dw/io/XMLStreamReader");
 const logger = Logger.getLogger("aco", "aco_tracked_changes_job");
 
 const TRACKED_CHANGES_CUSTOM_OBJECT = "AcoTrackedChanges";
+const PROCESSED_FILES_CUSTOM_OBJECT = "AcoProcessedFiles";
 
 const siteId = Site.getCurrent().getID();
 const trackedChanges = new ArrayList();
 let trackedChangesIterator = new ArrayList().iterator();
+let processedDeltaFiles = [];
+
+/**
+ * Gets the processed files record for a given delta export file name
+ * @param {string} fileName - The delta export file name (e.g., "000001")
+ * @returns {CustomObject} The processed files record
+ */
+function getProcessedFilesRecord(fileName) {
+  const processedFilesId = `${siteId}_${fileName}`;
+  return CustomObjectMgr.getCustomObject(
+    PROCESSED_FILES_CUSTOM_OBJECT,
+    processedFilesId
+  );
+}
+
+/**
+ * Creates the processed files record for a given delta export file name
+ * @param {string} fileName - The delta export file name (e.g., "000001")
+ * @returns {CustomObject} The processed files record
+ */
+function createProcessedFilesRecord(fileName) {
+  try {
+    const processedFilesId = `${siteId}_${fileName}`;
+    let record = null;
+
+    Transaction.wrap(function () {
+      record = CustomObjectMgr.createCustomObject(
+        PROCESSED_FILES_CUSTOM_OBJECT,
+        processedFilesId
+      );
+      record.custom.siteId = siteId;
+      record.custom.deltaExportFile = fileName;
+    });
+
+    logger.info(
+      `[${siteId}] [createProcessedFilesRecord] Created processed files record for ${fileName}`
+    );
+    return record;
+  } catch (error) {
+    logger.error(
+      `[${siteId}] [createProcessedFilesRecord] Error creating processed files record: ${error.message}`
+    );
+    throw error;
+  }
+}
+
+/**
+ * Checks if a delta export file has already been processed
+ * @param {string} fileName - The delta export file name (e.g., "000001.zip")
+ * @returns {boolean} True if already processed, false otherwise
+ */
+function isFileAlreadyProcessed(fileName) {
+  const processedFilesRecord = getProcessedFilesRecord(fileName);
+  return processedFilesRecord !== null;
+}
+
+/**
+ * Extracts the file name from a delta zip file
+ * @param {string} fileName - The file name (e.g., "000001.zip")
+ * @returns {string} The delta file name (e.g., "000001")
+ */
+function getDeltaFileName(fileName) {
+  return fileName.replace(".zip", "");
+}
 
 /**
  * Recursively deletes a directory and all its contents.
@@ -80,7 +145,7 @@ function getChildDirs(parentDir) {
  */
 function extractPriceBookChanges(zipFile) {
   const changes = [];
-  const deltaExportFileName = zipFile.getName().replace(".zip", "");
+  const deltaExportFileName = getDeltaFileName(zipFile.getName());
   const files = zipFile.listFiles().toArray();
   const uuidDir = files.find((file) => file.isDirectory());
   if (!uuidDir) {
@@ -170,7 +235,7 @@ function extractPriceBookChanges(zipFile) {
  */
 function extractCatalogChanges(zipFile) {
   const changes = [];
-  const deltaExportFileName = zipFile.getName().replace(".zip", "");
+  const deltaExportFileName = getDeltaFileName(zipFile.getName());
   const files = zipFile.listFiles().toArray();
   const uuidDir = files.find((file) => file.isDirectory());
   if (!uuidDir) {
@@ -266,19 +331,31 @@ exports.beforeStep = function (parameters, stepExecution) {
     return;
   }
 
-  const deltaExportFiles = deltaExportDir
+  const allDeltaExportFiles = deltaExportDir
     .list()
     .filter((file) => file.match(/^\d{6}\.zip$/))
     .sort();
-  if (deltaExportFiles.length === 0) {
+
+  if (allDeltaExportFiles.length === 0) {
     logger.info(
       `[${siteId}] [beforeStep] No delta export files found in ${deltaExportDir.getFullPath()}. No changes to process.`
     );
     return;
   }
 
+  // Filter out already processed files
+  const deltaExportFiles = allDeltaExportFiles.filter((file) => {
+    const alreadyProcessed = isFileAlreadyProcessed(getDeltaFileName(file));
+    if (alreadyProcessed) {
+      logger.info(
+        `[${siteId}] [beforeStep] Skipping already processed file: ${file}`
+      );
+    }
+    return !alreadyProcessed;
+  });
+
   logger.info(
-    `[${siteId}] [beforeStep] Found ${deltaExportFiles.length} delta export files to process.`
+    `[${siteId}] [beforeStep] Found ${deltaExportFiles.length} new delta export files to process.`
   );
 
   let tempDir = new File(deltaExportDir, `_aco_temp_${siteId}`);
@@ -295,13 +372,16 @@ exports.beforeStep = function (parameters, stepExecution) {
       let currentFile = new File(deltaExportDir, file);
       let currentTempDir = new File(
         tempDir,
-        currentFile.getName().replace(".zip", "")
+        getDeltaFileName(currentFile.getName())
       );
       currentFile.unzip(currentTempDir);
       const catalogChanges = extractCatalogChanges(currentTempDir);
       const priceBookChanges = extractPriceBookChanges(currentTempDir);
       trackedChanges.push(catalogChanges);
       trackedChanges.push(priceBookChanges);
+
+      // Track this file as being processed
+      processedDeltaFiles.push(getDeltaFileName(file));
 
       deleteDirRecursively(currentTempDir);
     });
@@ -360,9 +440,10 @@ exports.process = function (changeRecord, parameters, stepExecution) {
   }
 
   logger.debug(
-    `[${siteId}] [process] Saving change record: ${changeRecord.entityId}`
+    `[${siteId}] [process] Saving change record: ${changeRecord.entityId} from delta file ${changeRecord.deltaExportFile}`
   );
-  const idString = `${changeRecord.deltaExportFile}_${siteId}_${changeRecord.type}_${changeRecord.entityId}_${changeRecord.priceBookId}`;
+
+  const idString = `${siteId}_${changeRecord.entityId}_${changeRecord.type}_${changeRecord.priceBookId}`;
   const customObjectID = Encoding.toBase64(new Bytes(idString, "UTF-8"));
   try {
     Transaction.wrap(function () {
@@ -371,35 +452,26 @@ exports.process = function (changeRecord, parameters, stepExecution) {
         customObjectID
       );
 
-      let shouldUpdate = false;
+      // Since we only process files that haven't been seen before,
+      // all entities from this file represent legitimate updates
       if (!currentChangeRecord) {
         // Create new record if it doesn't exist
         currentChangeRecord = CustomObjectMgr.createCustomObject(
           TRACKED_CHANGES_CUSTOM_OBJECT,
           customObjectID
         );
-        shouldUpdate = true;
-      } else {
-        // Only update if this change hasn't been processed from this delta export file
-        shouldUpdate =
-          currentChangeRecord.custom.deltaExportFile !==
-          changeRecord.deltaExportFile;
-        if (!shouldUpdate) {
-          logger.debug(
-            `[${siteId}] [process] Skipping change record ${changeRecord.entityId} - already processed from delta export file: ${changeRecord.deltaExportFile}`
-          );
-        }
       }
 
-      if (shouldUpdate) {
-        currentChangeRecord.custom.entityId = changeRecord.entityId;
-        currentChangeRecord.custom.siteId = siteId;
-        currentChangeRecord.custom.priceBookId = changeRecord.priceBookId;
-        currentChangeRecord.custom.type = changeRecord.type;
-        currentChangeRecord.custom.isDeleted = changeRecord.isDeleted;
-        currentChangeRecord.custom.deltaExportFile =
-          changeRecord.deltaExportFile;
-      }
+      currentChangeRecord.custom.entityId = changeRecord.entityId;
+      currentChangeRecord.custom.siteId = siteId;
+      currentChangeRecord.custom.type = changeRecord.type;
+      currentChangeRecord.custom.priceBookId = changeRecord.priceBookId;
+      currentChangeRecord.custom.isDeleted = changeRecord.isDeleted;
+      currentChangeRecord.custom.deltaExportFile = changeRecord.deltaExportFile;
+
+      logger.debug(
+        `[${siteId}] [process] Successfully updated change record for ${changeRecord.entityId} from delta file ${changeRecord.deltaExportFile}`
+      );
     });
   } catch (error) {
     logger.error(
@@ -427,6 +499,11 @@ exports.afterStep = function (success, parameters, stepExecution) {
   if (!success) {
     return new Status(Status.ERROR, `[${siteId}] [afterStep] Job failed`);
   }
+
+  processedDeltaFiles.forEach((file) => {
+    createProcessedFilesRecord(file);
+  });
+
   return new Status(
     Status.OK,
     `[${siteId}] [afterStep] Job completed successfully`
