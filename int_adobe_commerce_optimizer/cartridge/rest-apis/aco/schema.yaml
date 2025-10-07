@@ -142,20 +142,32 @@ components:
           type: string
           description: The value itself.
     Variant:
-        type: object
-        description: A variant product for a master product.
-        properties:
-          orderable:
-            type: boolean
-            description: Indicates if the variant is orderable.
-          productId:
+      type: object
+      description: A variant product for a master product.
+      properties:
+        orderable:
+          type: boolean
+          description: Indicates if the variant is orderable.
+        productId:
+          type: string
+          description: The ID of the variant product.
+        variationValues:
+          type: object
+          description: Key-value pairs of variation attribute IDs and their values for this variant.
+          additionalProperties:
             type: string
-            description: The ID of the variant product.
-          variationValues:
-            type: object
-            description: Key-value pairs of variation attribute IDs and their values for this variant.
-            additionalProperties:
-              type: string
+    BundledProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the bundled product.
+        name:
+          type: string
+          description: The name of the bundled product.
+        quantity:
+          type: number
+          description: The quantity of the bundled product in the bundle.
     Product:
       type: object
       properties:
@@ -254,6 +266,16 @@ components:
             id:
               type: string
               description: The ID of the master product.
+        bundledProducts:
+          type: array
+          description: List of products that are bundled within this bundle product.
+          items:
+            $ref: "#/components/schemas/BundledProduct"
+        bundles:
+          type: array
+          description: List of bundles (product ID) that include this product.
+          items:
+            type: string
     ProductsResponse:
       type: object
       properties:
