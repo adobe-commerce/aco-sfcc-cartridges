@@ -167,6 +167,24 @@ function getMasterInfoForVariant(product) {
   } : null;
 }
 
+function getBundledProducts(product) {
+  if (!product.isBundle()) {
+    return [];
+  }
+  return product.getBundledProducts().toArray().map(bundledProduct => ({
+    id: bundledProduct.getID(),
+    name: bundledProduct.getName(),
+    quantity: product.getBundledProductQuantity(bundledProduct).getValue()
+  }));
+}
+
+function getBundles(product) {
+  if (!product.isBundled()) {
+    return [];
+  }
+  return product.getBundles().toArray().map(bundle => bundle.getID());
+}
+
 exports.getProducts = function () {
   const requestBody = JSON.parse(request.httpParameterMap.requestBodyAsString);
   const ids = requestBody.ids;
@@ -243,6 +261,10 @@ exports.getProducts = function () {
       } else if (product.isVariant()) {
         productData.variationValues = getVariationValuesForVariant(product);
         productData.master = getMasterInfoForVariant(product);
+      } else if (product.isBundle()) {
+          productData.bundledProducts = getBundledProducts(product);
+      } else if (product.isBundled()) {
+        productData.bundles = getBundles(product);
       }
       products.push(productData);
     } catch (e) {
