@@ -293,6 +293,36 @@ function extractCatalogChanges(zipFile) {
                 isDeleted,
                 priceBookId: null,
               });
+            } else if (xmlStreamReader.getLocalName() === "category") {
+              let categoryId = xmlStreamReader.getAttributeValue(
+                null,
+                "category-id"
+              );
+              let mode = xmlStreamReader.getAttributeValue(null, "mode");
+              let isDeleted = mode === "delete";
+              changes.push({
+                deltaExportFile: deltaExportFileName,
+                entityId: categoryId,
+                type: "category",
+                isDeleted,
+                priceBookId: null,
+              });
+            } else if (
+              xmlStreamReader.getLocalName() === "category-assignment"
+            ) {
+              let productId = xmlStreamReader.getAttributeValue(
+                null,
+                "product-id"
+              );
+              // We save this as a product change so the connector appropriately re-pulls
+              // and updates the ACO product payload with the new routes.
+              changes.push({
+                deltaExportFile: deltaExportFileName,
+                entityId: productId,
+                type: "product",
+                isDeleted: false,
+                priceBookId: null,
+              });
             }
           }
         }

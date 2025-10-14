@@ -108,12 +108,12 @@ If you prefer manual installation without Prophet:
 
 ### OAuth2 Setup
 
-The API endpoints require OAuth2 authentication with the `c_aco` scope:
+The API endpoints require OAuth2 authentication with the `c_aco`, `sfcc.products`, and the `sfcc.catalogs` scopes:
 
 1. **Create OAuth Client**
 
    - In Account Manager, create an API client
-   - Add the `c_aco` scope to the client permissions
+   - Add the `c_aco`, `sfcc.products`, and the `sfcc.catalogs` scopes to the client permissions
    - Note the client ID and secret
 
 2. **Configure Permissions**
