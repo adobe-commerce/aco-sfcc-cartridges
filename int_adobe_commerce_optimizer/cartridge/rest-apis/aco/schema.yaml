@@ -168,6 +168,18 @@ components:
         quantity:
           type: number
           description: The quantity of the bundled product in the bundle.
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the category.
+        name:
+          type: string
+          description: The display name of the of the catalog category for the current locale.
+        parentId:
+          type: string
+          description: The ID of the parent category.
     Product:
       type: object
       properties:
@@ -219,12 +231,11 @@ components:
         inStock:
           type: boolean
           description: Convenience method for isInStock(Number). Returns true, if the Product is available in the minimum-order-quantity. If the product does not have a minimum-order-quantity defined, in-stock is checked for a quantity value 1.
-        creationDate:
-          type: string
-          description: The creation date of the product.
-        lastModified:
-          type: string
-          description: The last modified date of the product.
+        categories:
+          type: array
+          description: List of categories for the product.
+          items:
+            $ref: "#/components/schemas/Category"
         prices:
           type: array
           description: Price information per price book.
@@ -243,7 +254,17 @@ components:
         type:
           type: string
           description: The type of the product. One of SIMPLE, MASTER, VARIANT, VARIATION_GROUP, BUNDLE, BUNDLED, PRODUCT_SET, PRODUCT_SET_PRODUCT.
-          enum: [SIMPLE, MASTER, VARIANT, VARIATION_GROUP, BUNDLE, BUNDLED, PRODUCT_SET, PRODUCT_SET_PRODUCT]
+          enum:
+            [
+              SIMPLE,
+              MASTER,
+              VARIANT,
+              VARIATION_GROUP,
+              BUNDLE,
+              BUNDLED,
+              PRODUCT_SET,
+              PRODUCT_SET_PRODUCT,
+            ]
         variationAttributes:
           type: array
           description: List of variation attributes for master products.
@@ -276,6 +297,13 @@ components:
           description: List of bundles (product ID) that include this product.
           items:
             type: string
+        creationDate:
+          type: string
+          description: The creation date of the product.
+        lastModified:
+          type: string
+          description: The last modified date of the product.
+
     ProductsResponse:
       type: object
       properties:

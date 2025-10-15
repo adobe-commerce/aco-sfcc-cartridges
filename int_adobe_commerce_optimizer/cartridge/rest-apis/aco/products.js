@@ -20,6 +20,17 @@ const logger = Logger.getLogger("aco", "aco_products");
 const MAX_IDS_PER_REQUEST = 100;
 const IMAGE_VIEW_TYPES = ["thumbnail", "small", "medium", "large"];
 
+function getCategories(product) {
+  return product
+    .getCategories()
+    .toArray()
+    .map((category) => ({
+      id: category.getID(),
+      name: category.getDisplayName(),
+      parentId: category.getParent() ? category.getParent().getID() : null,
+    }));
+}
+
 function getPricesPerPriceBook(product, priceBooks) {
   const prices = [];
   const priceModel = product.getPriceModel();
@@ -118,17 +129,22 @@ function getProductType(product) {
 function getVariationAttributes(product) {
   let variationAttributes = [];
   if (product.variationModel) {
-    const attrs = product.variationModel.getProductVariationAttributes().toArray();
+    const attrs = product.variationModel
+      .getProductVariationAttributes()
+      .toArray();
     if (attrs.length > 0) {
-      variationAttributes = attrs.map(attr => ({
+      variationAttributes = attrs.map((attr) => ({
         id: attr.getID(),
         attributeId: attr.getAttributeID(),
         name: attr.getDisplayName(),
-        values: product.variationModel.getAllValues(attr).toArray().map(val => ({
-          description: val.getDescription(),
-          name: val.getDisplayValue(),
-          value: val.getValue()
-        })),
+        values: product.variationModel
+          .getAllValues(attr)
+          .toArray()
+          .map((val) => ({
+            description: val.getDescription(),
+            name: val.getDisplayValue(),
+            value: val.getValue(),
+          })),
       }));
     }
   }
@@ -139,50 +155,63 @@ function getVariantsForMasterProduct(product) {
   if (!product.isMaster()) {
     return [];
   }
-  return product.getVariants().toArray().map(variant => {
-    const variationValues = getVariationValuesForVariant(variant);
-    return {
-      productId: variant.getID(),
-      variationValues: variationValues
-    };
-  });
+  return product
+    .getVariants()
+    .toArray()
+    .map((variant) => {
+      const variationValues = getVariationValuesForVariant(variant);
+      return {
+        productId: variant.getID(),
+        variationValues: variationValues,
+      };
+    });
 }
 
 function getVariationValuesForVariant(product) {
   const variationValues = {};
   if (product.variationModel) {
-    const attrs = product.variationModel.getProductVariationAttributes().toArray();
-    attrs.forEach(attr => {
+    const attrs = product.variationModel
+      .getProductVariationAttributes()
+      .toArray();
+    attrs.forEach((attr) => {
       const val = product.variationModel.getVariationValue(product, attr);
       variationValues[attr.getID()] = val ? val.getValue() : null;
-   });
+    });
   }
   return variationValues;
 }
 
 function getMasterInfoForVariant(product) {
   const masterProduct = product.variationModel.getMaster();
-  return masterProduct ? {
-    id: masterProduct.getID(),
-  } : null;
+  return masterProduct
+    ? {
+        id: masterProduct.getID(),
+      }
+    : null;
 }
 
 function getBundledProducts(product) {
   if (!product.isBundle()) {
     return [];
   }
-  return product.getBundledProducts().toArray().map(bundledProduct => ({
-    id: bundledProduct.getID(),
-    name: bundledProduct.getName(),
-    quantity: product.getBundledProductQuantity(bundledProduct).getValue()
-  }));
+  return product
+    .getBundledProducts()
+    .toArray()
+    .map((bundledProduct) => ({
+      id: bundledProduct.getID(),
+      name: bundledProduct.getName(),
+      quantity: product.getBundledProductQuantity(bundledProduct).getValue(),
+    }));
 }
 
 function getBundles(product) {
   if (!product.isBundled()) {
     return [];
   }
-  return product.getBundles().toArray().map(bundle => bundle.getID());
+  return product
+    .getBundles()
+    .toArray()
+    .map((bundle) => bundle.getID());
 }
 
 exports.getProducts = function () {
@@ -248,13 +277,12 @@ exports.getProducts = function () {
         searchable: product.isSearchable(),
         searchableFlag: product.getSearchableFlag(),
         inStock: product.getAvailabilityModel().isInStock(),
+        categories: getCategories(product),
         prices: getPricesPerPriceBook(product, priceBooks),
         customAttributes: getCustomAttributes(product),
         images: getImages(product),
-        creationDate: product.getCreationDate().toISOString(),
-        lastModified: product.getLastModified().toISOString(),
         type: getProductType(product),
-        variationAttributes: getVariationAttributes(product)
+        variationAttributes: getVariationAttributes(product),
       };
       if (product.isMaster()) {
         productData.variants = getVariantsForMasterProduct(product);
@@ -262,10 +290,12 @@ exports.getProducts = function () {
         productData.variationValues = getVariationValuesForVariant(product);
         productData.master = getMasterInfoForVariant(product);
       } else if (product.isBundle()) {
-          productData.bundledProducts = getBundledProducts(product);
+        productData.bundledProducts = getBundledProducts(product);
       } else if (product.isBundled()) {
         productData.bundles = getBundles(product);
       }
+      productData.creationDate = product.getCreationDate().toISOString();
+      productData.lastModified = product.getLastModified().toISOString();
       products.push(productData);
     } catch (e) {
       logger.error(
